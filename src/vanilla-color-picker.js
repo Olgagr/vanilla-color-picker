@@ -11,10 +11,15 @@
 (function(global) {
 
   // @todo: bind in as a build step, so css is readable
-  var basicCSS = '.vanilla-color-picker { display: inline-block; position: absolute; width: 200px; padding: 5px; background-color: #393939; border-radius: 5px; box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.3) } .vanilla-color-picker-single-color { display: inline-block; width: 20px; height: 20px; margin: 1px; border-radius: 2px; }';
-  function singleColorTpl(color, index, picked) {
+  var basicCSS = '.vanilla-color-picker { display: inline-block; position: absolute; width: 200px; padding: 5px; background-color: #393939; border-radius: 5px; box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.3) } .vanilla-color-picker-single-color { display: inline-block; width: 20px; height: 20px; margin: 1px; border-radius: 2px; }'+
+                  '.no-color { background: linear-gradient(45deg, #ffffff 0%,#ffffff 47%,#ff0f0f 51%,#ff0f0f 51%,#ff0f0f 51%,#ffffff 55%,#ffffff 100%); }';
+  function singleColorTpl(color, index, picked, noColor) {
     var pickedClass = picked ? "vanilla-color-picker-single-color-picked" : '';
-    return '<div class="vanilla-color-picker-single-color ' + pickedClass + '" tabindex="' + index + '" data-color="' + color + '" style="background-color:' + color + '"></div>';
+    if (color === 'noColor' && noColor) {
+      return '<div class="vanilla-color-picker-single-color no-color ' + pickedClass + '" tabindex="' + index + '" data-color="' + noColor + '"></div>';  
+    } else {
+      return '<div class="vanilla-color-picker-single-color ' + pickedClass + '" tabindex="' + index + '" data-color="' + color + '" style="background-color:' + color + '"></div>';
+    }
   }
   var DEFAULT_COLORS = ['red', 'yellow', 'green'];
 
@@ -53,7 +58,7 @@
     };
   }
 
-  function SinglePicker(elem, colors, className, positionOnTop) {
+  function SinglePicker(elem, colors, className, positionOnTop, noColor) {
     MessageMediator.apply(this);
     this.targetElem = elem;
     this.elem = null;
@@ -108,7 +113,7 @@
       var currentlyChosenColorIndex = colors.indexOf(this.targetElem.dataset.vanillaPickerColor);
 
       for (var i = 0; i < colors.length; i++) {
-        this.elem.innerHTML += singleColorTpl(colors[i], i + 1, i == currentlyChosenColorIndex);
+        this.elem.innerHTML += singleColorTpl(colors[i], i + 1, i == currentlyChosenColorIndex, noColor);
       }
       this.targetElem.parentNode.appendChild(this.elem);
       this.elem.setAttribute('tabindex', 1);
@@ -123,7 +128,7 @@
       var _this = this;
       this.elem.addEventListener('click', function(e) {
         if (e.target.classList.contains('vanilla-color-picker-single-color')) {
-          _this.emit('colorChosen', e.target.dataset.color); 
+          _this.emit('colorChosen', e.target.dataset.color);
         }
       });
       this.elem.addEventListener('keydown', function(e) {
@@ -176,6 +181,9 @@
           this_.emit('colorChosen', color, this_.elem);
         }
       });
+      this.on('noColor', function(color) {
+        this_.noColor = color;
+      });
       this.on('className', function(className) {
         this_.className = className;
       });
@@ -199,7 +207,7 @@
       if (this_.currentPicker) {
         return;
       }
-      this_.currentPicker = new SinglePicker(this_.elem, this_.colors, this_.className, this_.positionOnTop);
+      this_.currentPicker = new SinglePicker(this_.elem, this_.colors, this_.className, this_.positionOnTop, this_.noColor);
       this_.currentPicker.on('colorChosen', function(color) {
         this_._updateElemState(color);
         this_.destroyPicker();
