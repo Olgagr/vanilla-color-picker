@@ -11,7 +11,7 @@
 (function(global) {
 
   // @todo: bind in as a build step, so css is readable
-  var basicCSS = '.vanilla-color-picker { display: inline-block; position: absolute; padding: 5px; background-color: #fff; box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.3) } .vanilla-color-picker-single-color { display: inline-block; width: 20px; height: 20px; margin: 1px; border-radius: 2px; }';
+  var basicCSS = '.vanilla-color-picker { display: inline-block; position: absolute; width: 200px; padding: 5px; background-color: #393939; border-radius: 5px; box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.3) } .vanilla-color-picker-single-color { display: inline-block; width: 20px; height: 20px; margin: 1px; border-radius: 2px; }';
   function singleColorTpl(color, index, picked) {
     var pickedClass = picked ? "vanilla-color-picker-single-color-picked" : '';
     return '<div class="vanilla-color-picker-single-color ' + pickedClass + '" tabindex="' + index + '" data-color="' + color + '" style="background-color:' + color + '"></div>';
@@ -38,7 +38,7 @@
   }
 
   function MessageMediator() {
-    this.subscribers = {}
+    this.subscribers = {};
     this.on = function(eventName, callback) {
       this.subscribers[eventName] = this.subscribers[eventName] || [];
       this.subscribers[eventName].push(callback);
@@ -53,7 +53,7 @@
     };
   }
 
-  function SinglePicker(elem, colors, className) {
+  function SinglePicker(elem, colors, className, positionOnTop) {
     MessageMediator.apply(this);
     this.targetElem = elem;
     this.elem = null;
@@ -80,7 +80,11 @@
       var top = this.targetElem.offsetTop;
       var height = this.targetElem.offsetHeight;
       this.elem.style.left = left + 'px';
-      this.elem.style.top = (top + height) + 'px';
+      if(positionOnTop) {
+        this.elem.style.top = (top - height - this.elem.offsetHeight) + 'px';
+      } else {
+        this.elem.style.top = (top + height) + 'px';
+      }
     };
 
     this._onFocusLost = function() {
@@ -112,7 +116,7 @@
       var toFocus = currentlyChosenColorIndex > -1 ? currentlyChosenColorIndex : 0;
 
       this.elem.children[toFocus].focus();
-      this.elem.children[toFocus].addEventListener('blur', this_._onFocusLost)
+      this.elem.children[toFocus].addEventListener('blur', this_._onFocusLost);
     };
 
     this._addEventListeners = function() {
@@ -135,7 +139,7 @@
       });
     };
 
-    this._initialize()
+    this._initialize();
   }
 
   function PickerHolder(elem) {
@@ -147,6 +151,7 @@
     this.className = '';
     this.elem = elem;
     this.currentPicker = null;
+    this.positionOnTop = false;
     var this_ = this;
 
     this._initialize = function() {
@@ -156,6 +161,9 @@
     this._addEventListeners = function() {
       this.elem.addEventListener('click', this.openPicker);
       this.elem.addEventListener('focus', this.openPicker);
+      this.on('positionOnTop', function() {
+        this_.positionOnTop = true;
+      });
       this.on('customColors', function(colors) {
         if (!colors instanceof Array) {
           throw new Error('Colors must be an array');
@@ -170,7 +178,7 @@
       });
       this.on('className', function(className) {
         this_.className = className;
-      })
+      });
     };
 
     this._updateElemState = function(color) {
@@ -185,13 +193,13 @@
       this_.currentPicker.destroy();
       this_.currentPicker = null;
       this_.emit('pickerClosed');
-    }
+    };
 
     this.openPicker = function() {
       if (this_.currentPicker) {
         return;
       }
-      this_.currentPicker = new SinglePicker(this_.elem, this_.colors, this_.className);
+      this_.currentPicker = new SinglePicker(this_.elem, this_.colors, this_.className, this_.positionOnTop);
       this_.currentPicker.on('colorChosen', function(color) {
         this_._updateElemState(color);
         this_.destroyPicker();
@@ -204,7 +212,7 @@
     };
 
     this._initialize();
-  };
+  }
 
   function vanillaColorPicker(element, options) {
     // @todo: move from here
