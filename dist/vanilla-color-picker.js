@@ -87,6 +87,15 @@
       this.elem.style.left = left + 'px';
       if(positionOnTop) {
         this.elem.style.top = (top - height - this.elem.offsetHeight) + 'px';
+        var posistionRealativeToWindow = this.elem.getBoundingClientRect(),
+            topCorrection = posistionRealativeToWindow.top < 0 ? posistionRealativeToWindow.top : 0;
+        this.elem.style.top = parseInt(this.elem.style.top, 10) - topCorrection + 'px';
+        // medium editor specific code, we have to modify color picker position
+        // if this is too height and go beyond window
+        var activeToolbar = document.querySelector('.medium-editor-toolbar-active');
+        if (activeToolbar && topCorrection) {
+          this.elem.style.left = activeToolbar.offsetWidth + 5 + 'px';
+        }
       } else {
         this.elem.style.top = (top + height) + 'px';
       }
