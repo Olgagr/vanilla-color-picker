@@ -11,7 +11,7 @@
 (function(global) {
 
   // @todo: bind in as a build step, so css is readable
-  var basicCSS = '.vanilla-color-picker { display: inline-block; position: absolute; width: 200px; padding: 5px; background-color: #393939; border-radius: 5px; box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.3) } .vanilla-color-picker-single-color { display: inline-block; width: 20px; height: 20px; margin: 1px; border-radius: 2px; }'+
+  var basicCSS = '.vanilla-color-picker { display: inline-block; position: absolute; width: 204px; padding: 5px; background-color: #393939; border-radius: 5px; box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.3) } .vanilla-color-picker-single-color { display: inline-block; width: 20px; height: 20px; margin: 1px 2px 0; border-radius: 2px; }'+
                   '.no-color { background: linear-gradient(45deg, #ffffff 0%,#ffffff 47%,#ff0f0f 51%,#ff0f0f 51%,#ff0f0f 51%,#ffffff 55%,#ffffff 100%); }';
   function singleColorTpl(color, index, picked, noColor) {
     var pickedClass = picked ? "vanilla-color-picker-single-color-picked" : '';
@@ -124,7 +124,7 @@
       for (var i = 0; i < colors.length; i++) {
         this.elem.innerHTML += singleColorTpl(colors[i], i + 1, i == currentlyChosenColorIndex, noColor);
       }
-      this.targetElem.parentNode.appendChild(this.elem);
+      this.targetElem.parentNode.parentNode.appendChild(this.elem);
       this.elem.setAttribute('tabindex', 1);
 
       var toFocus = currentlyChosenColorIndex > -1 ? currentlyChosenColorIndex : 0;
@@ -136,11 +136,13 @@
     this._addEventListeners = function() {
       var _this = this;
       this.elem.addEventListener('click', function(e) {
+        e.stopPropagation();
         if (e.target.classList.contains('vanilla-color-picker-single-color')) {
           _this.emit('colorChosen', e.target.dataset.color);
         }
       });
       this.elem.addEventListener('keydown', function(e) {
+        e.stopPropagation();
         var ENTER = 13;
         var ESC = 27;
         var keyCode = e.which || e.keyCode;
